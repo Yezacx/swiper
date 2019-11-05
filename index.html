@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>带有定时器的无缝轮播图</title>
+    <style>
+        .box {
+            width: 490px;
+            height: 170px;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin: 100px auto;
+        }
+        .inner {
+            width: 490px;
+            height: 170px;
+            position: relative;
+            overflow: hidden;
+        }
+        ul {
+            width: 600%;
+            list-style: none;
+            position: absolute;
+            left: 0;
+            top: 0;
+            padding: 0;
+            margin: 0;
+        }
+        ul li {
+            float: left;
+        }
+        img {
+            /*去掉图片底边的3像素距离*/
+            vertical-align: middle;
+            width: 100%;
+        }
+        ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        ol li {
+            float: left;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #ccc;
+            text-align: center;
+            line-height: 14px;
+            margin: 0 3px;
+            background-color: #fff;
+        }
+        ol li.current {
+            background-color: yellow;
+        }
+        .arr {
+            display: none;
+            width: 100%;
+            height: 40px;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            margin-top: -20px;
+        }
+        .arr span{
+            position: absolute;
+            top: 0;
+            width: 30px;
+            height: 40px;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            font-size: 20px;
+            line-height: 40px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .arr .left{
+            left: 0;
+        }
+        .arr .right{
+            right: 0;
+        }
+        .circle span{
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            line-height: 14px;
+            text-align: center;
+            font-size: 12px;
+            margin: 0 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="inner">
+            <ul>
+                <li><a href="javascript:;"><img src="images/01.jpg"></a></li>
+                <li><a href="javascript:;"><img src="images/02.jpg"></a></li>
+                <li><a href="javascript:;"><img src="images/03.jpg"></a></li>
+                <li><a href="javascript:;"><img src="images/04.jpg"></a></li>
+                <li><a href="javascript:;"><img src="images/05.jpg"></a></li>
+            </ul>
+            <ol></ol>
+            <div class="arr">
+                <span class="left"><</span>
+                <span class="right">></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function () {
+            var box = document.getElementsByClassName("box")[0];
+            var inner = box.children[0];
+            var ul = box.children[0].children[0];
+            var ol = box.children[0].children[1];
+            var arr = box.children[0].children[2];
+            var spanArr = box.children[0].children[2].children;
+            var imgWidth = inner.offsetWidth;
+            /*复制ul中的第一个li添加到ul最后*/
+            var newLi = ul.children[0].cloneNode(true);
+            ul.appendChild(newLi);
+            /*添加ul里的li-1个li标签到ol中，并给新添加的li标签添加内容*/
+            for(var i =0;i<ul.children.length-1;i++){
+                var olLi = document.createElement("li");
+                olLi.innerHTML = i+1;
+                ol.appendChild(olLi);
+            }
+            /*鼠标放到盒子上，清除定时器，显示向左向右切换*/
+            box.onmouseover = function () {
+                arr.style.display = "block";
+                clearInterval(timer);
+            };
+            /*鼠标移开盒子，开启定时器，隐藏向左向右切换*/
+            box.onmouseout = function () {
+                arr.style.display = "none";
+                timer = setInterval(autoplay,1000);
+            };
+            var olLiArr = ol.children;
+            var key = 0;/*模拟图片索引值*/
+            var squery = 0;/*模拟小方块索引值*/
+            /*默认第一个小方块被点亮*/
+            olLiArr[0].className = "current";
+            for(var i =0;i<olLiArr.length;i++){
+                olLiArr[i].index = i;
+                olLiArr[i].onmouseover = function () {
+                    for(var j=0;j<olLiArr.length;j++){
+                        olLiArr[j].className = "";
+                    }
+                    this.className = "current";
+                    animate(ul,-imgWidth*this.index);
+                    /*定时器索引值与小方块索引值同步*/
+                    key = squery = this.index;
+                }
+            }
+            /*设置定时器*/
+            var timer = setInterval(autoplay,1000);
+            function autoplay() {
+                squery++;
+                if (squery > olLiArr.length - 1) {
+                    squery = 0;
+                }
+                for (var i = 0; i < olLiArr.length; i++) {
+                    olLiArr[i].className = "";
+                }
+                olLiArr[squery].className = "current";
+                key++;
+                if (key > olLiArr.length) {
+                    ul.style.left = 0;
+                    key = 1;
+                }
+                animate(ul, -key * imgWidth);
+            }
+            /*向左切换图片*/
+            spanArr[0].onclick = function () {
+                squery--;
+                if (squery < 0) {
+                    squery = olLiArr.length-1;
+                }
+                for (var i = 0; i < olLiArr.length; i++) {
+                    olLiArr[i].className = "";
+                }
+                olLiArr[squery].className = "current";
+                key--;
+                if (key < 0) {
+                    ul.style.left = -imgWidth*olLiArr.length + "px";
+                    key = olLiArr.length-1;
+                }
+                animate(ul, -key * imgWidth);
+            };
+            /*向右切换图片，与定时器一样*/
+            spanArr[1].onclick = function () {
+                autoplay();
+            };
+            /*动画原理*/
+            function animate(ele,target){
+                /*要用定时器，先清除定时器，定时器作为盒子的属性存在，
+                 这样的话不会和其他的盒子的定时器冲突*/
+                clearInterval(ele.timer);
+                /*我们要求盒子既能向前又能向后，那么步长就得有正有负，目标值大于当前值时取正，目标值小于当前值时取负*/
+                var speed = target>ele.offsetLeft?10:-10;
+                ele.timer = setInterval(function () {
+                    var value = target - ele.offsetLeft;
+                    /*用style.left赋值，用offsetLeft获取值，而且用offsetLeft获取值也特别方便，是
+                     * 现成的number,便于计算*/
+                    ele.style.left = ele.offsetLeft + speed + "px";
+                    if(Math.abs(value)<=Math.abs(speed)){
+                        ele.style.left = target + "px";
+                        clearInterval(ele.timer);
+                    }
+                },10)
+            }
+        }
+    </script>
+</body>
+</html>
